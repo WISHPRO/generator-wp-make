@@ -1,5 +1,5 @@
 <?php
-namespace TenUp\<%= namespace %>\Core;
+namespace <%= opts.root_namespace %>\<%= namespace %>\Core;
 
 /**
  * This is a very basic test case to get things started. You should probably rename this and make
@@ -13,7 +13,7 @@ namespace TenUp\<%= namespace %>\Core;
  *   - https://github.com/10up/wp_mock
  */
 
-use TenUp\<%= namespace %> as Base;
+use <%= opts.root_namespace %>\<%= namespace %> as Base;
 
 class Core_Tests extends Base\TestCase {
 
@@ -29,7 +29,7 @@ class Core_Tests extends Base\TestCase {
 			define( '<%= opts.funcPrefix.toUpperCase() %>_TEMPLATE_URL', 'template_url' );
 		}
 		if ( ! defined( '<%= opts.funcPrefix.toUpperCase() %>_VERSION' ) ) {
-			define( '<%= opts.funcPrefix.toUpperCase() %>_VERSION', '0.0.1' );
+			define( '<%= opts.funcPrefix.toUpperCase() %>_VERSION', '0.1.0' );
 		}
 		if ( ! defined( '<%= opts.funcPrefix.toUpperCase() %>_URL' ) ) {
 			define( '<%= opts.funcPrefix.toUpperCase() %>_URL', 'url' );
@@ -43,10 +43,10 @@ class Core_Tests extends Base\TestCase {
 	 */
 	public function test_setup() {
 		// Setup
-		\WP_Mock::expectActionAdded( 'after_setup_theme',  'TenUp\<%= namespace %>\Core\i18n'        );
-		\WP_Mock::expectActionAdded( 'wp_head',            'TenUp\<%= namespace %>\Core\header_meta' );
-		\WP_Mock::expectActionAdded( 'wp_enqueue_scripts', 'TenUp\<%= namespace %>\Core\scripts'     );
-		\WP_Mock::expectActionAdded( 'wp_enqueue_scripts', 'TenUp\<%= namespace %>\Core\styles'      );
+		\WP_Mock::expectActionAdded( 'after_setup_theme',  '<%= opts.root_namespace %>\<%= namespace %>\Core\i18n'        );
+		\WP_Mock::expectActionAdded( 'wp_enqueue_scripts', '<%= opts.root_namespace %>\<%= namespace %>\Core\scripts'     );
+		\WP_Mock::expectActionAdded( 'wp_enqueue_scripts', '<%= opts.root_namespace %>\<%= namespace %>\Core\styles'      );
+		<% if ( false !== opts.humanstxt ) { %>\WP_Mock::expectActionAdded( 'wp_head',            '<%= opts.root_namespace %>\<%= namespace %>\Core\header_meta' );<% } %>
 
 		// Act
 		setup();
@@ -86,7 +86,7 @@ class Core_Tests extends Base\TestCase {
 				'<%= opts.funcPrefix %>',
 				'template_url/assets/js/<%= fileSlug %>.min.js',
 				array(),
-				'0.0.1',
+				'0.1.0',
 				true,
 			),
 		) );
@@ -101,12 +101,15 @@ class Core_Tests extends Base\TestCase {
 				'<%= opts.funcPrefix %>',
 				'template_url/assets/js/<%= fileSlug %>.js',
 				array(),
-				'0.0.1',
+				'0.1.0',
 				true,
 			),
 		) );
+		\WP_Mock::onFilter( 'special_filter' )
+		        ->with( '<%= opts.funcPrefix %>_script_debug' )
+		        ->reply( true );
 
-		scripts( true );
+		scripts();
 		$this->assertConditionsMet();
 	}
 
@@ -121,7 +124,7 @@ class Core_Tests extends Base\TestCase {
 				'<%= opts.funcPrefix %>',
 				'url/assets/css/<%= fileSlug %>.min.css',
 				array(),
-				'0.0.1',
+				'0.1.0',
 			),
 		) );
 
@@ -135,21 +138,26 @@ class Core_Tests extends Base\TestCase {
 				'<%= opts.funcPrefix %>',
 				'url/assets/css/<%= fileSlug %>.css',
 				array(),
-				'0.0.1',
+				'0.1.0',
 			),
 		) );
+		\WP_Mock::onFilter( 'special_filter' )
+		        ->with( '<%= opts.funcPrefix %>_style_debug' )
+		        ->reply( true );
 
-		styles( true );
+		styles();
 		$this->assertConditionsMet();
 	}
-
+<% if ( false !== opts.humanstxt ) { %>
 	/**
 	 * Test header meta injection
 	 */
 	public function test_header_meta() {
 		// Setup
+		$url = 'template_url/humans.txt';
 		$meta = '<link type="text/plain" rel="author" href="template_url/humans.txt" />';
-		\WP_Mock::onFilter( '<%= opts.funcPrefix %>_humans' )->with( $meta )->reply( $meta );
+		\WP_Mock::onFilter( '<%= opts.funcPrefix %>_humans' )->with( $url )->reply( $url );
+		\WP_Mock::wpPassThruFunction( 'esc_url' );
 
 		// Act
 		ob_start();
@@ -159,5 +167,5 @@ class Core_Tests extends Base\TestCase {
 		// Verify
 		$this->assertConditionsMet();
 		$this->assertEquals( $meta, $result );
-	}
+	}<% } %>
 }

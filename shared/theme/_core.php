@@ -1,5 +1,5 @@
 <?php
-namespace TenUp\<%= namespace %>\Core;
+namespace <%= opts.root_namespace %>\<%= namespace %>\Core;
 
 /**
  * Set up theme defaults and register supported WordPress features.
@@ -8,7 +8,7 @@ namespace TenUp\<%= namespace %>\Core;
  *
  * @uses add_action()
  *
- * @return void.
+ * @return void
  */
 function setup() {
 	$n = function( $function ) {
@@ -16,9 +16,9 @@ function setup() {
 	};
 
 	add_action( 'after_setup_theme',  $n( 'i18n' )        );
-	add_action( 'wp_head',            $n( 'header_meta' ) );
 	add_action( 'wp_enqueue_scripts', $n( 'scripts' )     );
 	add_action( 'wp_enqueue_scripts', $n( 'styles' )      );
+	<% if ( false !== opts.humanstxt ) { %>add_action( 'wp_head',            $n( 'header_meta' ) );<% } %>
 }
 
 /**
@@ -32,7 +32,7 @@ function setup() {
  *
  * @since 0.1.0
  *
- * @return void.
+ * @return void
  */
 function i18n() {
 	load_theme_textdomain( '<%= opts.funcPrefix %>', <%= opts.funcPrefix.toUpperCase() %>_PATH . '/languages' );
@@ -45,9 +45,15 @@ function i18n() {
  *
  * @since 0.1.0
  *
- * @return void.
+ * @return void
  */
-function scripts( $debug = false ) {
+function scripts() {
+	/**
+	 * Flag whether to enable loading uncompressed/debugging assets. Default false.
+	 * 
+	 * @param bool <%= opts.funcPrefix %>_script_debug
+	 */
+	$debug = apply_filters( '<%= opts.funcPrefix %>_script_debug', false );
 	$min = ( $debug || defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ? '' : '.min';
 
 	wp_enqueue_script(
@@ -66,9 +72,15 @@ function scripts( $debug = false ) {
  *
  * @since 0.1.0
  *
- * @return void.
+ * @return void
  */
-function styles( $debug = false ) {
+function styles() {
+	/**
+	 * Flag whether to enable loading uncompressed/debugging assets. Default false.
+	 *
+	 * @param bool <%= opts.funcPrefix %>_style_debug
+	 */
+	$debug = apply_filters( '<%= opts.funcPrefix %>_style_debug', false );
 	$min = ( $debug || defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ? '' : '.min';
 
 	wp_enqueue_style(
@@ -79,17 +91,22 @@ function styles( $debug = false ) {
 	);
 }
 
-/**
+<% if ( false !== opts.humanstxt ) { %>/**
  * Add humans.txt to the <head> element.
  *
  * @uses apply_filters()
  *
  * @since 0.1.0
  *
- * @return void.
+ * @return void
  */
 function header_meta() {
-	$humans = '<link type="text/plain" rel="author" href="' . <%= opts.funcPrefix.toUpperCase() %>_TEMPLATE_URL . '/humans.txt" />';
+	/**
+	 * Filter the path used for the site's humans.txt attribution file
+	 *
+	 * @param string $humanstxt
+	 */
+	$humanstxt = apply_filters( '<%= opts.funcPrefix %>_humans', <%= opts.funcPrefix.toUpperCase() %>_TEMPLATE_URL . '/humans.txt' );
 
-	echo apply_filters( '<%= opts.funcPrefix %>_humans', $humans );
-}
+	echo '<link type="text/plain" rel="author" href="' . esc_url( $humanstxt ) . '" />';
+}<% } %>
